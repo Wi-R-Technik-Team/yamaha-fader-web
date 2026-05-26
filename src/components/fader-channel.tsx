@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { FaderChannelConfig } from "@/config/fader-config";
+import { useTio } from "@/context/tio-context";
 import { VerticalFader } from "./vertical-fader";
 
 interface FaderChannelProps {
@@ -19,23 +20,27 @@ function toDb(pct: number): string {
 }
 
 export function FaderChannel({ config }: FaderChannelProps) {
-  const [value, setValue] = useState(config.defaultValue);
-  const [muted, setMuted] = useState(false);
+  const { faderStates, updateGain, updateMute } = useTio();
+  const { value, muted } = faderStates[config.ch] ?? {
+    value: config.defaultValue,
+    muted: false,
+  };
+
   const [manualMute, setManualMute] = useState(false);
 
   function handleChange(v: number) {
-    setValue(v);
+    updateGain(config.ch, v);
     if (v === config.min) {
-      setMuted(true);
+      updateMute(config.ch, true);
     } else if (!manualMute) {
-      setMuted(false);
+      updateMute(config.ch, false);
     }
   }
 
   function toggleMute() {
     const next = !muted;
-    setMuted(next);
     setManualMute(next);
+    updateMute(config.ch, next);
   }
 
   return (
