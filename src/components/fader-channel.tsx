@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { FaderChannelConfig } from "@/config/fader-config";
 import { useTio } from "@/context/tio-context";
@@ -12,6 +12,7 @@ interface FaderChannelProps {
 
 const GAIN_MIN_DB = -6;
 const GAIN_MAX_DB = 8;
+const GAIN_SEND_INTERVAL_MS = 80;
 
 function toDb(pct: number): string {
   if (pct === 0) return "MUTE";
@@ -29,20 +30,57 @@ export function FaderChannel({ config }: FaderChannelProps) {
   const [manualMute, setManualMute] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [displayValue, setDisplayValue] = useState(value);
+  const lastGainSentAt = useRef(0);
+  const lastGainSentValue = useRef<number | null>(null);
+  const pendingGainTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!isDragging) setDisplayValue(value);
   }, [isDragging, value]);
 
+  useEffect(
+    () => () => {
+      if (pendingGainTimer.current) clearTimeout(pendingGainTimer.current);
+    },
+    [],
+  );
+
+  function sendGain(v: number) {
+    lastGainSentAt.current = Date.now();
+    lastGainSentValue.current = v;
+    updateGain(config.ch, v);
+  }
+
+  function sendGainThrottled(v: number) {
+    const elapsed = Date.now() - lastGainSentAt.current;
+
+    if (elapsed >= GAIN_SEND_INTERVAL_MS) {
+      if (pendingGainTimer.current) clearTimeout(pendingGainTimer.current);
+      pendingGainTimer.current = null;
+      sendGain(v);
+      return;
+    }
+
+    if (pendingGainTimer.current) clearTimeout(pendingGainTimer.current);
+    pendingGainTimer.current = setTimeout(() => {
+      pendingGainTimer.current = null;
+      sendGain(v);
+    }, GAIN_SEND_INTERVAL_MS - elapsed);
+  }
+
   function handleChange(v: number) {
     setIsDragging(true);
     setDisplayValue(v);
+    sendGainThrottled(v);
   }
 
   function handleCommit(v: number) {
     setIsDragging(false);
     setDisplayValue(v);
-    updateGain(config.ch, v);
+    if (pendingGainTimer.current) clearTimeout(pendingGainTimer.current);
+    pendingGainTimer.current = null;
+    if (lastGainSentValue.current !== v) sendGain(v);
+
     if (v === config.min) {
       updateMute(config.ch, true);
     } else if (!manualMute) {
