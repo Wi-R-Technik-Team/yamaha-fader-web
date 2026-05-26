@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 interface VerticalFaderProps {
   value: number;
   onChange: (value: number) => void;
+  onCommit?: (value: number) => void;
   min?: number;
   max?: number;
   disabled?: boolean;
@@ -16,6 +17,7 @@ interface VerticalFaderProps {
 export function VerticalFader({
   value,
   onChange,
+  onCommit,
   min = 0,
   max = 100,
   disabled = false,
@@ -27,6 +29,7 @@ export function VerticalFader({
       orientation="vertical"
       value={[value]}
       onValueChange={([v]) => onChange(v)}
+      onValueCommit={([v]) => onCommit?.(v)}
       min={min}
       max={max}
       disabled={disabled}

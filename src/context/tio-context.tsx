@@ -41,8 +41,8 @@ interface TioProviderProps {
 
 export function TioProvider({ children, initialStates }: TioProviderProps) {
   const wsRef = useRef<WebSocket | null>(null);
-  const connectRef = useRef<() => void>(() => {});
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sessionId = useRef(crypto.randomUUID());
 
   const [status, setStatus] = useState<ConnectionStatus>("disconnected");
   const [faderStates, setFaderStates] =
@@ -61,6 +61,7 @@ export function TioProvider({ children, initialStates }: TioProviderProps) {
     (raw: string) => {
       try {
         const msg = JSON.parse(raw) as Record<string, unknown>;
+        if (msg._sid === sessionId.current) return;
         if (
           msg.command === "gain" &&
           typeof msg.ch === "number" &&
@@ -82,7 +83,7 @@ export function TioProvider({ children, initialStates }: TioProviderProps) {
   );
 
   const connect = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
+    if (!WS_URL || wsRef.current?.readyState === WebSocket.OPEN) return;
 
     setStatus("connecting");
     const ws = new WebSocket(WS_URL);
@@ -91,16 +92,11 @@ export function TioProvider({ children, initialStates }: TioProviderProps) {
     ws.onopen = () => setStatus("connected");
     ws.onclose = () => {
       setStatus("disconnected");
-      reconnectTimer.current = setTimeout(
-        () => connectRef.current(),
-        RECONNECT_DELAY_MS,
-      );
+      reconnectTimer.current = setTimeout(connect, RECONNECT_DELAY_MS);
     };
     ws.onerror = () => ws.close();
     ws.onmessage = (e: MessageEvent<string>) => applyMessage(e.data);
   }, [applyMessage]);
-
-  connectRef.current = connect;
 
   useEffect(() => {
     connect();
@@ -112,7 +108,9 @@ export function TioProvider({ children, initialStates }: TioProviderProps) {
 
   const send = useCallback((payload: object) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(payload));
+      wsRef.current.send(
+        JSON.stringify({ ...payload, _sid: sessionId.current }),
+      );
     }
   }, []);
 

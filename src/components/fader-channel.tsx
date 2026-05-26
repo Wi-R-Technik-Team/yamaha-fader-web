@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { FaderChannelConfig } from "@/config/fader-config";
 import { useTio } from "@/context/tio-context";
@@ -27,8 +27,21 @@ export function FaderChannel({ config }: FaderChannelProps) {
   };
 
   const [manualMute, setManualMute] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [displayValue, setDisplayValue] = useState(value);
+
+  useEffect(() => {
+    if (!isDragging) setDisplayValue(value);
+  }, [isDragging, value]);
 
   function handleChange(v: number) {
+    setIsDragging(true);
+    setDisplayValue(v);
+  }
+
+  function handleCommit(v: number) {
+    setIsDragging(false);
+    setDisplayValue(v);
     updateGain(config.ch, v);
     if (v === config.min) {
       updateMute(config.ch, true);
@@ -45,13 +58,16 @@ export function FaderChannel({ config }: FaderChannelProps) {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <span className="text-2xl font-semibold tabular-nums">{value} %</span>
+      <span className="text-2xl font-semibold tabular-nums">
+        {displayValue} %
+      </span>
       <span className="text-xs tabular-nums text-muted-foreground -mt-3">
-        {toDb(value)}
+        {toDb(displayValue)}
       </span>
       <VerticalFader
-        value={value}
+        value={displayValue}
         onChange={handleChange}
+        onCommit={handleCommit}
         min={config.min}
         max={config.max}
         color={config.color}
