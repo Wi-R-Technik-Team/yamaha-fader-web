@@ -10,17 +10,17 @@ interface FaderChannelProps {
   config: FaderChannelConfig;
 }
 
-const GAIN_MIN_DB = -6;
-const GAIN_MAX_DB = 8;
 const GAIN_SEND_INTERVAL_MS = 80;
 
-function toDb(pct: number): string {
+function toDb(pct: number, minDb: number, maxDb: number): string {
   if (pct === 0) return "MUTE";
-  const db = GAIN_MIN_DB + (pct / 100) * (GAIN_MAX_DB - GAIN_MIN_DB);
+  const db = minDb + (pct / 100) * (maxDb - minDb);
   return (db >= 0 ? "+" : "") + db.toFixed(1) + " dB";
 }
 
 export function FaderChannel({ config }: FaderChannelProps) {
+  const minDb = config.minDb ?? -6;
+  const maxDb = config.maxDb ?? 8;
   const { faderStates, updateGain, updateMute } = useTio();
   const { value, muted } = faderStates[config.ch] ?? {
     value: config.defaultValue,
@@ -100,7 +100,7 @@ export function FaderChannel({ config }: FaderChannelProps) {
         {displayValue} %
       </span>
       <span className="text-xs tabular-nums text-muted-foreground -mt-3">
-        {toDb(displayValue)}
+        {toDb(displayValue, minDb, maxDb)}
       </span>
       <VerticalFader
         value={displayValue}

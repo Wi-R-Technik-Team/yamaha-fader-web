@@ -5,6 +5,8 @@ export interface FaderChannelConfig {
   min: number;
   max: number;
   defaultValue: number;
+  minDb?: number; // Default is -6
+  maxDb?: number; // Default is +8
   color?: string; // Default is #fbbf24
 }
 
@@ -44,5 +46,7 @@ export const FADER_CHANNELS: FaderChannelConfig[] = [
     max: 100,
     defaultValue: 50,
     color: "#3b82f6",
+    minDb: -6,
+    maxDb: 16
   },
 ];
