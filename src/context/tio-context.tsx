@@ -20,7 +20,7 @@ export interface FaderState {
 interface TioContextValue {
   status: ConnectionStatus;
   faderStates: Record<number, FaderState>;
-  updateGain: (ch: number, pct: number) => void;
+  updateGain: (ch: number, value: number, gainDb: number) => void;
   updateMute: (ch: number, on: boolean) => void;
   sendPhantom: (ch: number, on: boolean) => void;
 }
@@ -63,12 +63,6 @@ export function TioProvider({ children, initialStates }: TioProviderProps) {
         const msg = JSON.parse(raw) as Record<string, unknown>;
         if (msg._sid === sessionId.current) return;
         if (
-          msg.command === "gain" &&
-          typeof msg.ch === "number" &&
-          typeof msg.pct === "number"
-        ) {
-          setChannel(msg.ch, { value: msg.pct });
-        } else if (
           msg.command === "mute" &&
           typeof msg.ch === "number" &&
           typeof msg.on === "boolean"
@@ -115,9 +109,9 @@ export function TioProvider({ children, initialStates }: TioProviderProps) {
   }, []);
 
   const updateGain = useCallback(
-    (ch: number, pct: number) => {
-      setChannel(ch, { value: pct });
-      send({ command: "gain", ch, pct });
+    (ch: number, value: number, gainDb: number) => {
+      setChannel(ch, { value });
+      send({ command: "gain", ch, gain: gainDb });
     },
     [send, setChannel],
   );

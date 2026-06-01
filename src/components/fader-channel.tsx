@@ -12,9 +12,9 @@ interface FaderChannelProps {
 
 const GAIN_SEND_INTERVAL_MS = 80;
 
-function toDb(pct: number, minDb: number, maxDb: number): string {
-  if (pct === 0) return "MUTE";
-  const db = minDb + (pct / 100) * (maxDb - minDb);
+function toDb(value: number, minDb: number, maxDb: number): string {
+  if (value === 0) return "MUTE";
+  const db = minDb + (value / 100) * (maxDb - minDb);
   return (db >= 0 ? "+" : "") + db.toFixed(1) + " dB";
 }
 
@@ -48,7 +48,8 @@ export function FaderChannel({ config }: FaderChannelProps) {
   function sendGain(v: number) {
     lastGainSentAt.current = Date.now();
     lastGainSentValue.current = v;
-    updateGain(config.ch, v);
+    const gainDb = Math.round(minDb + (v / 100) * (maxDb - minDb));
+    updateGain(config.ch, v, gainDb);
   }
 
   function sendGainThrottled(v: number) {
