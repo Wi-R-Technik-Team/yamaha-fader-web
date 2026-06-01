@@ -6,7 +6,7 @@ export interface FaderChannelConfig {
   max: number;
   defaultValue: number;
   minDb?: number; // Default is -6
-  maxDb?: number; // Default is +8
+  maxDb?: number; // Default is +16
   color?: string; // Default is #fbbf24
 }
 

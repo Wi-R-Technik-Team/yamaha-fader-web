@@ -20,7 +20,7 @@ function toDb(value: number, minDb: number, maxDb: number): string {
 
 export function FaderChannel({ config }: FaderChannelProps) {
   const minDb = config.minDb ?? -6;
-  const maxDb = config.maxDb ?? 8;
+  const maxDb = config.maxDb ?? 16;
   const { faderStates, updateGain, updateMute } = useTio();
   const { value, muted } = faderStates[config.ch] ?? {
     value: config.defaultValue,
