@@ -1,3 +1,10 @@
+export type DeviceMode = "Tio" | "Tf1";
+
+export interface DeviceSetupConfig {
+  host: string;
+  mode: DeviceMode;
+}
+
 export interface FaderChannelConfig {
   id: string;
   label: string;
@@ -5,10 +12,15 @@ export interface FaderChannelConfig {
   min: number;
   max: number;
   defaultValue: number;
-  minDb?: number; // Default is -6
-  maxDb?: number; // Default is +16
-  color?: string; // Default is #fbbf24
+  minDb?: number; // Default: -6
+  maxDb?: number; // Default: +16
+  color?: string;
 }
+
+export const DEVICE_CONFIG: DeviceSetupConfig = {
+  host: "your.local.host",
+  mode: "Tio",
+};
 
 export const FADER_CHANNELS: FaderChannelConfig[] = [
   {
@@ -47,6 +59,6 @@ export const FADER_CHANNELS: FaderChannelConfig[] = [
     defaultValue: 50,
     color: "#3b82f6",
     minDb: -6,
-    maxDb: 16
+    maxDb: 16,
   },
 ];
