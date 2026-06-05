@@ -18,7 +18,7 @@ export interface FaderChannelConfig {
 }
 
 export const DEVICE_CONFIG: DeviceSetupConfig = {
-  host: "your.local.host",
+  host: "Tio1608-D.local.",
   mode: "Tio",
 };
 

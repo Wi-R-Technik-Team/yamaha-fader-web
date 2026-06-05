@@ -64,7 +64,9 @@ const CHANNEL_DB = Object.fromEntries(
 );
 
 function gainToSlider(db: number, minDb: number, maxDb: number): number {
-  return Math.max(0, Math.min(100, ((db - minDb) / (maxDb - minDb)) * 100));
+  const rawPercentage = ((db - minDb) / (maxDb - minDb)) * 100;
+  
+  return Math.max(0, Math.min(100, Math.round(rawPercentage)));
 }
 
 function sliderToGain(value: number, minDb: number, maxDb: number): number {
